@@ -1,16 +1,16 @@
 module Board where
 
-
 import Data.List
 import Data.Maybe
 import Data.Char
 
 
 data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deriving (Eq, Show)
-data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Show
+data Board = Board { wolf :: Piece,  sheep :: [Piece] }
 
 data Result = Unconcluded | SheepWon | WolfWon deriving Show
 
+data Direction = L | R deriving Eq
 
 pf :: Board -> (Int, Int) -> Char
 pf board (x,y)
@@ -24,6 +24,9 @@ printBoard board =
   unlines ( header : [row board j | j <- [0..7]] ) where 
   row b r = intercalate " " (show r : [ [pf board (x, r)] | x <- [0..7]])
   header = "  0 1 2 3 4 5 6 7"
+
+instance Show Board where
+  show (Board w s) = printBoard(Board w s)
 
 pieces :: Board -> [(Int,Int)]
 pieces b =
@@ -70,9 +73,15 @@ moveWolf (x,y) b
   | (x,y) `elem` possibleMoves (wolf b) b = Board (Wolf (x,y)) (sheep b)
   | otherwise = b
 
-moveSheep :: (Int,Int) ->  Int -> Board -> Board
-moveSheep (x,y) i b
+moveSheep :: Direction ->  Int -> Board -> Board
+moveSheep d i b
   | (x,y) `elem` possibleMoves (sheep b !! (i - 1)) b =
     Board (wolf b) [ if i - 1 == j then (Sheep (x,y)) else sheep b !! j | j <-
                        [0..(length (sheep b) - 1)]]
   | otherwise = b
+  where 
+    (x,y) = if d == L
+            then (x'-1,y'+1)
+            else (x'+1,y'+1)
+      where
+        (x',y') = pfield $ sheep b !! (i - 1)
