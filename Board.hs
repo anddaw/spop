@@ -10,7 +10,7 @@ data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deri
 data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Show
 
 data Result = Unconcluded | SheepWon | WolfWon deriving Show
-data Turn = WolfTurn | SheepTurn deriving Eq
+data Turn = WolfTurn | SheepTurn deriving (Eq, Show)
 
 
 pf :: Board -> (Int, Int) -> Char
