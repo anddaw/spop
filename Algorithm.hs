@@ -1,12 +1,14 @@
-import Board
+module Algorithm where
 
-data GameTree = Node Turn Board [GameTree] deriving Show
+import Board
+import Tools
+
+data GameTree = Node {turn :: Turn, board :: Board, tab :: [GameTree]} deriving Show
 
 isWolfBehindThreeSheep :: Board -> Bool
 isWolfBehindThreeSheep (Board w s) = (countNumberOfSheepBehindWolf w s) >= 3
-
-countNumberOfSheepBehindWolf :: Piece -> [Piece] -> Int
-countNumberOfSheepBehindWolf w s = length ( filter (> yWolf) ySheep )
+    where
+        countNumberOfSheepBehindWolf w s = length ( filter (> yWolf) ySheep )
                                         where
                                             yWolf = snd (pfield w)
                                             ySheep = (map snd (map pfield s))
@@ -21,31 +23,31 @@ countMeanDistanceToAllSheep w (s:xs) = sqrt (fromIntegral ((x1 - x2)^2 + (y1 - y
                                                         y1 = snd (pfield w)
                                                         y2 = snd (pfield s)
 
-permutationsOfAllSheep :: [Piece] -> [Piece]  -> Board -> [[(Int, Int)]]
-permutationsOfAllSheep [] _ _ = []
-permutationsOfAllSheep (s:xs) sheepList b = (bigPermutationForOneSheep (possibleMoves s b) s sheepList b) ++ permutationsOfAllSheep xs sheepList b
+permutationsOfAllSheep :: [Piece] -> Board -> [[(Int, Int)]]
+permutationsOfAllSheep [] _ = []
+permutationsOfAllSheep (s:xs) b = (bigPermutationForOneSheep (possibleMoves s b) s b) ++ permutationsOfAllSheep xs b
                     where
-                    bigPermutationForOneSheep [] _ _ _ = []
-                    bigPermutationForOneSheep (newPosition:xp) sheep sheepList b = [(smallPermutationForOneSheep sheep newPosition sheepList b)]
-                        ++ (bigPermutationForOneSheep xp sheep sheepList b)
+                    bigPermutationForOneSheep [] _ _ = []
+                    bigPermutationForOneSheep (newPosition:xp) s b = [(smallPermutationForOneSheep s newPosition b)]
+                        ++ (bigPermutationForOneSheep xp s b)
                             where
-                                smallPermutationForOneSheep sheep newSheepPos sheepList b = filter (/= (pfield sheep)) (newSheepPos : (map pfield sheepList))
+                                smallPermutationForOneSheep x newSheepPos b = filter (/= (pfield x)) (newSheepPos : (map pfield (sheep b)))
 
 permutationsOfWolf :: Piece -> Board -> [(Int, Int)]
 permutationsOfWolf w b = possibleMoves w b
 
-mapujDoBoardaOwce :: Piece -> [[(Int, Int)]] -> [Board]
-mapujDoBoardaOwce w s = map (\z -> Board w z) (map (\x ->  map (\y -> Sheep y) x) s)
+mapSheepToBoard :: Piece -> [[(Int, Int)]] -> [Board]
+mapSheepToBoard w s = map (\z -> Board w z) (map (\x ->  map (\y -> Sheep y) x) s)
 
-mapujDoBoardaWilka :: [(Int, Int)] -> [Piece] -> [Board]
-mapujDoBoardaWilka w s = map (\z -> Board z s) (map (\x -> Wolf x) w)
+mapWolfToBoard :: [(Int, Int)] -> [Piece] -> [Board]
+mapWolfToBoard w s = map (\z -> Board z s) (map (\x -> Wolf x) w)
 
 oppositeTurn WolfTurn = SheepTurn
 oppositeTurn SheepTurn = WolfTurn
 
 generateBoard :: Board -> Turn -> [Board]
-generateBoard b t | t == SheepTurn = mapujDoBoardaOwce (wolf b) (permutationsOfAllSheep (sheep b) (sheep b) b)
-                  | t == WolfTurn = mapujDoBoardaWilka (permutationsOfWolf (wolf b) b) (sheep b)
+generateBoard b t | t == SheepTurn = mapSheepToBoard (wolf b) (permutationsOfAllSheep (sheep b) b)
+                  | t == WolfTurn = mapWolfToBoard (permutationsOfWolf (wolf b) b) (sheep b)
 
 generateNode :: Board -> Turn -> Int -> [Board] -> GameTree
 generateNode b t _ [] = Node t b []
@@ -57,31 +59,26 @@ rateNode (Node _ b _) = beingBehindThreeSheep + beingFarFromEdges + beingFarFrom
             where
                   x = fst (pfield (wolf b))
                   y = snd (pfield (wolf b))
-                  beingBehindThreeSheep | isWolfBehindThreeSheep b = 1000
+                  beingBehindThreeSheep | isWolfBehindThreeSheep b = 10000
                                         | otherwise  = 0
-                  beingFarFromEdges     | x > 0 && x < 7 && y > 0 && y < 7 = 100
+                  beingFarFromEdges     | x > 0 && x < 7 && y > 0 && y < 7 = 1000
                                         | otherwise = 0
                   beingFarFromSheep = countMeanDistanceToAllSheep (wolf b) (sheep b)
 
-rateTree :: (Floating a, Ord a) => GameTree -> a
-rateTree (Node t b treeList) | length treeList /= 0 && t == WolfTurn = maximum (map (\y -> rateNode y) treeList)
-                             | length treeList /= 0 && t == SheepTurn = minimum (map (\y -> rateNode y) treeList)
-                             | otherwise = 0
+rateTree :: GameTree -> Int
+rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y) treeList))
+    where
+    rateTreeSub (Node t b treeList)  | length treeList /= 0 && t == WolfTurn = max (rateNode (Node t b treeList)) (maximum (map (\y -> rateTreeSub y ) treeList))
+                                        | length treeList /= 0 && t == SheepTurn =  min (rateNode (Node t b treeList))(minimum (map (\y -> rateTreeSub y ) treeList))
+                                        | otherwise = 0
+                                     where
+                                     tab = (map (\y -> rateTreeSub y) treeList)
 
--------------------------------
+getOptimalMove :: Board -> Turn -> Board
+getOptimalMove b t =
+    let x = generateNode b t 0 (generateBoard b t)
+    in board ( (tab x) !! (rateTree x))
 
-t = WolfTurn
-b = Board (Wolf(5,6)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,0)]
-s = [Sheep(1,0), Sheep(3,0), Sheep(5,0), Sheep(7,0)]
-one = Wolf(5,5)
-lista = generateNode b t 0 (generateBoard b t)
-p = rateTree lista
-
-node = Node t (Board (Wolf(5,6)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,0)]) []
-x = rateNode node
-
--- s = printBoard b
--- putStr s
 
 
 
