@@ -6,11 +6,15 @@ import Data.Char
 
 
 data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deriving (Eq, Show)
-data Board = Board { wolf :: Piece,  sheep :: [Piece] }
+data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Eq
 
 data Result = Unconcluded | SheepWon | WolfWon deriving Show
 
-data Direction = L | R deriving Eq
+data Direction = L | R deriving (Eq, Show)
+
+dir :: [Char] -> Direction
+dir "l" = L
+dir "r" = R
 
 pf :: Board -> (Int, Int) -> Char
 pf board (x,y)
@@ -85,3 +89,4 @@ moveSheep d i b
             else (x'+1,y'+1)
       where
         (x',y') = pfield $ sheep b !! (i - 1)
+
