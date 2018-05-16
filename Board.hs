@@ -9,6 +9,7 @@ data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deri
 data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Eq
 
 data Result = Unconcluded | SheepWon | WolfWon deriving Show
+data Turn = WolfTurn | SheepTurn deriving (Eq, Show)
 
 data Direction = L | R deriving (Eq, Show)
 
@@ -64,9 +65,14 @@ possibleMoves p b =
     not (elem m (pieces b)) ]
 
 
-result :: Board -> Result
-result b
+getPossibleMovesOfAllSheep :: Board -> [Piece] -> [(Int, Int)]
+getPossibleMovesOfAllSheep b (s:xs) = (possibleMoves s b) ++ getPossibleMovesOfAllSheep b xs
+getPossibleMovesOfAllSheep b [] = []
+
+result :: Board -> Turn -> Result
+result b t
   | snd (pfield (wolf b)) == 0 = WolfWon
+  | getPossibleMovesOfAllSheep b (sheep b) == [] && t == SheepTurn = WolfWon
   | possibleMoves (wolf b) b == [] = SheepWon
   | otherwise = Unconcluded
 
