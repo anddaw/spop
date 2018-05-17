@@ -55,17 +55,21 @@ generateNode b t n listaNextow | n < 1 = Node t b (map (\x->(generateNode x (opp
                                | otherwise = Node t b []
 
 rateNode :: Floating a => GameTree -> a
-rateNode (Node _ b _) = beingBehindThreeSheep + beingFarFromEdges + beingFarFromSheep
+rateNode (Node _ b _) = beingOnLastRow + beingBehindThreeSheep + beingFarFromEdges + beingFarFromSheep
             where
                   x = fst (pfield (wolf b))
                   y = snd (pfield (wolf b))
-                  beingBehindThreeSheep | isWolfBehindThreeSheep b = 10000
+                  beingOnLastRow | y == 0 = 10000
+                                 | otherwise  = 0
+                  beingBehindThreeSheep | isWolfBehindThreeSheep b = 5000
                                         | otherwise  = 0
                   beingFarFromEdges     | x > 0 && x < 7 && y > 0 && y < 7 = 1000
                                         | otherwise = 0
                   beingFarFromSheep = countMeanDistanceToAllSheep (wolf b) (sheep b)
 
+
 rateTree :: GameTree -> Int
+rateTree (Node t b []) = -1
 rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y) treeList))
     where
     rateTreeSub (Node t b treeList)  | length treeList /= 0 && t == WolfTurn = max (rateNode (Node t b treeList)) (maximum (map (\y -> rateTreeSub y ) treeList))
@@ -77,7 +81,12 @@ rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y) treeList))
 getOptimalMove :: Board -> Turn -> Board
 getOptimalMove b t =
     let x = generateNode b t 0 (generateBoard b t)
-    in board ( (tab x) !! (rateTree x))
+    in
+        if (rateTree x) /= (-1)
+        then
+            board((tab x) !! (rateTree x))
+        else
+            b
 
 
 

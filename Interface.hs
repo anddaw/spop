@@ -69,7 +69,8 @@ doMove c b = do
 doMoveSheep :: Direction -> Int -> Board -> IO ()
 doMoveSheep d i b = do
   if b' /= b
-    then doMoveWolf b'
+    then
+    doMoveWolf b'
     else do
     putStrLn "Move not possible"
     readAndApplyCommand b
@@ -87,7 +88,7 @@ checkResult b = do
     SheepWon -> displayResult "SHEEP WON!"
     WolfWon -> displayResult "WOLF WON!"
     where
-      res = result b WolfTurn
+      res = result b
     
 displayResult :: String -> IO ()
 displayResult r  = do

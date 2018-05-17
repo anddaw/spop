@@ -69,10 +69,10 @@ getPossibleMovesOfAllSheep :: Board -> [Piece] -> [(Int, Int)]
 getPossibleMovesOfAllSheep b (s:xs) = (possibleMoves s b) ++ getPossibleMovesOfAllSheep b xs
 getPossibleMovesOfAllSheep b [] = []
 
-result :: Board -> Turn -> Result
-result b t
+result :: Board -> Result
+result b
   | snd (pfield (wolf b)) == 0 = WolfWon
-  | getPossibleMovesOfAllSheep b (sheep b) == [] && t == SheepTurn = WolfWon
+  | getPossibleMovesOfAllSheep b (sheep b) == [] = WolfWon
   | possibleMoves (wolf b) b == [] = SheepWon
   | otherwise = Unconcluded
 
