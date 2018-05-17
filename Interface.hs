@@ -3,6 +3,7 @@ module Interface where
 import Data.Char
 import Data.List
 import Board
+import Algorithm
 import System.IO
 import System.Exit
 
@@ -77,9 +78,8 @@ doMoveSheep d i b = do
 
 doMoveWolf :: Board -> IO ()
 doMoveWolf b = do
-  -- TODO
-  checkResult b
-  
+  checkResult (getOptimalMove b WolfTurn)
+
 checkResult :: Board -> IO ()
 checkResult b = do
   case res of
@@ -87,7 +87,7 @@ checkResult b = do
     SheepWon -> displayResult "SHEEP WON!"
     WolfWon -> displayResult "WOLF WON!"
     where
-      res = result b
+      res = result b WolfTurn
     
 displayResult :: String -> IO ()
 displayResult r  = do
