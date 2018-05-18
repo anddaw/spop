@@ -7,16 +7,16 @@ import Algorithm
 import System.IO
 import System.Exit
 
--- initialBoard = Board
---   (Wolf (0,7))
---   [
---     (Sheep (1,0)),
---     (Sheep (3,0)),
---     (Sheep (5,0)),
---     (Sheep (7,0))
---   ]
+initialBoard = Board
+  (Wolf (0,7))
+  [
+    (Sheep (1,0)),
+    (Sheep (3,0)),
+    (Sheep (5,0)),
+    (Sheep (7,0))
+  ]
 
-initialBoard = Board (Wolf(4,1)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
+-- initialBoard = Board (Wolf(4,1)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
 
 splitCommand :: String -> (String, String)
 splitCommand cmd =

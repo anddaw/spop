@@ -51,7 +51,7 @@ generateBoard b t | t == SheepTurn = mapSheepToBoard (wolf b) (permutationsOfAll
 
 generateNode :: Board -> Turn -> Int -> [Board] -> GameTree
 generateNode b t _ [] = Node t b []
-generateNode b t n listaNextow | n < 2 = Node t b (map (\x->(generateNode x (oppositeTurn t) (n+1) (generateBoard x (oppositeTurn t)))) listaNextow)
+generateNode b t n listaNextow | n < 5 && (result b) == Unconcluded = Node t b (map (\x->(generateNode x (oppositeTurn t) (n+1) (generateBoard x (oppositeTurn t)))) listaNextow)
                                | otherwise = Node t b []
 
 rateNode :: GameTree -> Int
@@ -59,14 +59,14 @@ rateNode (Node _ b _) = beingOnLastRow + beingBehindThreeSheep + beingFarFromEdg
             where
                   x = fst (pfield (wolf b))
                   y = snd (pfield (wolf b))
-                  beingOnLastRow | y == 0 = 10000
+                  beingOnLastRow | y == 0 = 10000 *
                                  | otherwise  = 0
                   beingBehindThreeSheep | isWolfBehindThreeSheep b = 5000
                                         | otherwise  = 0
                   beingFarFromEdges     | x > 0 && x < 7 && y > 0 && y < 7 = 1000
                                         | otherwise = 0
                   beingFarFromSheep = round (countMeanDistanceToAllSheep (wolf b) (sheep b))
-                  goingForward = (7-y)*100
+                  goingForward = (7 - y) * 100
                   isWolfWithNoMoves | possibleMoves (wolf b) b == [] = -100000
                                     | otherwise = 0
 
@@ -75,9 +75,8 @@ rateTree :: GameTree -> Int
 rateTree (Node t b []) = -1
 rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y) treeList))
 
-
-rateTreeSub (Node t b treeList)  | length treeList /= 0 && t == WolfTurn = max (rateNode (Node t b treeList)) (maximum (map (\y -> rateTreeSub y ) treeList))
-                                 | length treeList /= 0 && t == SheepTurn =  min (rateNode (Node t b treeList))(minimum (map (\y -> rateTreeSub y ) treeList))
+rateTreeSub (Node t b treeList)  | length treeList /= 0 && t == WolfTurn = maximum tab
+                                 | length treeList /= 0 && t == SheepTurn = minimum tab
                                  | otherwise = rateNode (Node t b treeList)
                                  where
                                  tab = (map (\y -> rateTreeSub y) treeList)
@@ -96,5 +95,13 @@ getOptimalMove b =
 
 test (Node t b treeList) = map (\y -> rateTreeSub y) treeList
 
-b = Board (Wolf(4,1)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
+b = Board (Wolf(4,1)) [Sheep(1,2), Sheep(3,4), Sheep(4,3), Sheep(6,7)]
 t = generateNode b WolfTurn 0 (generateBoard b WolfTurn)
+o = getOptimalMove b
+
+
+
+-- b = Board (Wolf(6,0)) [Sheep(2,7), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
+
+
+

@@ -8,7 +8,7 @@ import Data.Char
 data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deriving (Eq, Show)
 data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Eq
 
-data Result = Unconcluded | SheepWon | WolfWon deriving Show
+data Result = Unconcluded | SheepWon | WolfWon deriving (Eq, Show)
 data Turn = WolfTurn | SheepTurn deriving (Eq, Show)
 
 data Direction = L | R deriving (Eq, Show)
