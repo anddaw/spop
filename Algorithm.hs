@@ -69,33 +69,26 @@ rateNode (Node _ b _) n = beingOnLastRow + beingBehindThreeSheep + beingFarFromE
                   isWolfWithNoMoves | possibleMoves (wolf b) b == [] = -100000
                                     | otherwise = 0
 
+getIndexOfBestNodeInTree :: GameTree -> Int
+getIndexOfBestNodeInTree (Node t b []) = -1
+getIndexOfBestNodeInTree (Node t b treeList) = head ( filter ((== maximum tab) . (tab !!)) [0..] )
+    where
+    tab = (map (\y -> rateTree y 0) treeList)
 
-rateTree :: GameTree -> Int
-rateTree (Node t b []) = -1
-rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y 0) treeList))
 
-rateTreeSub (Node t b treeList) n  | length treeList /= 0 && t == WolfTurn = maximum tab
-                                 | length treeList /= 0 && t == SheepTurn = minimum tab
-                                 | otherwise = rateNode (Node t b treeList) n
-                                 where
-                                 tab = (map (\y -> rateTreeSub y (n+1)) treeList)
+rateTree :: GameTree -> Int -> Int
+rateTree (Node t b treeList) n  | length treeList /= 0 && t == WolfTurn = maximum tab
+                                   | length treeList /= 0 && t == SheepTurn = minimum tab
+                                   | otherwise = rateNode (Node t b treeList) n
+                                    where
+                                    tab = (map (\y -> rateTree y (n+1)) treeList)
 
 getOptimalMove :: Board -> Board
 getOptimalMove b =
     let x = generateNode b WolfTurn 0 (generateBoard b WolfTurn)
     in
-        if (rateTree x) /= (-1)
+        if (getIndexOfBestNodeInTree x) /= (-1)
         then
-            brd((tab x) !! (rateTree x))
+            brd((tab x) !! (getIndexOfBestNodeInTree x))
         else
             b
-
-maxim :: (Ord a) => [a] -> (a, Int)
-maxim l =
-  let pmaxim :: (Ord a) => [a] -> Int -> (a, Int)
-      pmaxim [x] xi = (x, xi)
-      pmaxim (x:xs) xi
-        | x > t     = (x, xi)
-        | otherwise = (t, ti)
-        where (t, ti) = pmaxim xs (xi + 1)
-  in pmaxim l 0
