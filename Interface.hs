@@ -16,8 +16,6 @@ initialBoard = Board
     (Sheep (7,0))
   ]
 
--- initialBoard = Board (Wolf(4,1)) [Sheep(1,6), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
-
 splitCommand :: String -> (String, String)
 splitCommand cmd =
   (\(x,y) -> (x, dropWhile (==' ') y)) $ span (/=' ') cmd
@@ -87,13 +85,14 @@ checkResult :: Board -> IO ()
 checkResult b = do
   case res of
     Unconcluded -> readAndApplyCommand b
-    SheepWon -> displayResult "SHEEP WON!"
-    WolfWon -> displayResult "WOLF WON!"
+    SheepWon -> displayResult "SHEEP WON!" b
+    WolfWon -> displayResult "WOLF WON!"b
     where
       res = result b
     
-displayResult :: String -> IO ()
-displayResult r  = do
+displayResult :: String -> Board -> IO ()
+displayResult r b  = do
+  putStr $ "\n" ++ (show b) ++ "\n> "
   putStrLn r
   putStrLn "Press enter to play again"
   _ <- getLine
@@ -110,3 +109,5 @@ displayHelp b = do
     "press enter to continue"
   _ <- getLine
   readAndApplyCommand b
+
+

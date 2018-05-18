@@ -1,14 +1,13 @@
 module Algorithm where
 
 import Board
-import Tools
 
 data GameTree = Node {turn :: Turn, brd :: Board, tab :: [GameTree]} deriving Show
 
 isWolfBehindThreeSheep :: Board -> Bool
 isWolfBehindThreeSheep (Board w s) = (countNumberOfSheepBehindWolf w s) >= 3
     where
-        countNumberOfSheepBehindWolf w s = length ( filter (> yWolf) ySheep )
+        countNumberOfSheepBehindWolf w s = length ( filter (>= yWolf) ySheep )
                                         where
                                             yWolf = snd (pfield w)
                                             ySheep = (map snd (map pfield s))
@@ -51,35 +50,35 @@ generateBoard b t | t == SheepTurn = mapSheepToBoard (wolf b) (permutationsOfAll
 
 generateNode :: Board -> Turn -> Int -> [Board] -> GameTree
 generateNode b t _ [] = Node t b []
-generateNode b t n listaNextow | n < 5 && (result b) == Unconcluded = Node t b (map (\x->(generateNode x (oppositeTurn t) (n+1) (generateBoard x (oppositeTurn t)))) listaNextow)
+generateNode b t n listaNextow | n < 7 && (result b) == Unconcluded = Node t b (map (\x->(generateNode x (oppositeTurn t) (n+1) (generateBoard x (oppositeTurn t)))) listaNextow)
                                | otherwise = Node t b []
 
-rateNode :: GameTree -> Int
-rateNode (Node _ b _) = beingOnLastRow + beingBehindThreeSheep + beingFarFromEdges + beingFarFromSheep + goingForward + isWolfWithNoMoves
+rateNode :: GameTree -> Int -> Int
+rateNode (Node _ b _) n = beingOnLastRow + beingBehindThreeSheep + beingFarFromEdges + beingFarFromSheep + goingForward + isWolfWithNoMoves
             where
                   x = fst (pfield (wolf b))
                   y = snd (pfield (wolf b))
-                  beingOnLastRow | y == 0 = 10000 *
+                  beingOnLastRow | y == 0 = (10-n) * 10000
                                  | otherwise  = 0
                   beingBehindThreeSheep | isWolfBehindThreeSheep b = 5000
                                         | otherwise  = 0
                   beingFarFromEdges     | x > 0 && x < 7 && y > 0 && y < 7 = 1000
                                         | otherwise = 0
                   beingFarFromSheep = round (countMeanDistanceToAllSheep (wolf b) (sheep b))
-                  goingForward = (7 - y) * 100
+                  goingForward = (7-y) * 100
                   isWolfWithNoMoves | possibleMoves (wolf b) b == [] = -100000
                                     | otherwise = 0
 
 
 rateTree :: GameTree -> Int
 rateTree (Node t b []) = -1
-rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y) treeList))
+rateTree (Node t b treeList) = snd (maxim (map (\y -> rateTreeSub y 0) treeList))
 
-rateTreeSub (Node t b treeList)  | length treeList /= 0 && t == WolfTurn = maximum tab
+rateTreeSub (Node t b treeList) n  | length treeList /= 0 && t == WolfTurn = maximum tab
                                  | length treeList /= 0 && t == SheepTurn = minimum tab
-                                 | otherwise = rateNode (Node t b treeList)
+                                 | otherwise = rateNode (Node t b treeList) n
                                  where
-                                 tab = (map (\y -> rateTreeSub y) treeList)
+                                 tab = (map (\y -> rateTreeSub y (n+1)) treeList)
 
 getOptimalMove :: Board -> Board
 getOptimalMove b =
@@ -91,17 +90,12 @@ getOptimalMove b =
         else
             b
 
--------
-
-test (Node t b treeList) = map (\y -> rateTreeSub y) treeList
-
-b = Board (Wolf(4,1)) [Sheep(1,2), Sheep(3,4), Sheep(4,3), Sheep(6,7)]
-t = generateNode b WolfTurn 0 (generateBoard b WolfTurn)
-o = getOptimalMove b
-
-
-
--- b = Board (Wolf(6,0)) [Sheep(2,7), Sheep(3,6), Sheep(5,6), Sheep(7,6)]
-
-
-
+maxim :: (Ord a) => [a] -> (a, Int)
+maxim l =
+  let pmaxim :: (Ord a) => [a] -> Int -> (a, Int)
+      pmaxim [x] xi = (x, xi)
+      pmaxim (x:xs) xi
+        | x > t     = (x, xi)
+        | otherwise = (t, ti)
+        where (t, ti) = pmaxim xs (xi + 1)
+  in pmaxim l 0
