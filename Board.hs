@@ -26,7 +26,7 @@ pf board (x,y)
 
 printBoard :: Board -> String
 printBoard board =
-  unlines ( header : [row board j | j <- [0..7]] ) where 
+  unlines ( header : [row board j | j <- [0..7]] ) where
   row b r = intercalate " " (show r : [ [pf board (x, r)] | x <- [0..7]])
   header = "  0 1 2 3 4 5 6 7"
 
@@ -79,7 +79,7 @@ result b
 
 moveWolf :: (Int, Int) -> Board -> Board
 
-moveWolf (x,y) b 
+moveWolf (x,y) b
   | (x,y) `elem` possibleMoves (wolf b) b = Board (Wolf (x,y)) (sheep b)
   | otherwise = b
 
@@ -89,10 +89,9 @@ moveSheep d i b
     Board (wolf b) [ if i - 1 == j then (Sheep (x,y)) else sheep b !! j | j <-
                        [0..(length (sheep b) - 1)]]
   | otherwise = b
-  where 
+  where
     (x,y) = if d == L
             then (x'-1,y'+1)
             else (x'+1,y'+1)
       where
         (x',y') = pfield $ sheep b !! (i - 1)
-

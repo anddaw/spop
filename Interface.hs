@@ -6,6 +6,9 @@ import Board
 import Algorithm
 import System.IO
 import System.Exit
+import System.IO.Error
+import Control.Exception
+import Control.Monad
 
 initialBoard = Board
   (Wolf (0,7))
@@ -36,18 +39,21 @@ readAndApplyCommand b = do
       "restart" -> readAndApplyCommand initialBoard
       "quit" -> exitSuccess
       _ -> wrongInput input b
-  
+
 
 doLoad :: [Char] -> Board -> IO ()
 doLoad c b = do
   putStrLn $ "LOADING: " ++ c ++ "\n"
-  -- TODO
   readAndApplyCommand b
 
 doSave :: [Char] -> Board -> IO ()
 doSave c b = do
   putStrLn "SAVING"
-  -- TODO
+  catch (do
+    writeFile c (printBoard b)
+    putStrLn ""
+    putStrLn ("Game saved to: " ++ c))
+    handleSavingError
   readAndApplyCommand b
 
 wrongInput :: [Char] -> Board -> IO ()
@@ -89,7 +95,7 @@ checkResult b = do
     WolfWon -> displayResult "WOLF WON!"b
     where
       res = result b
-    
+
 displayResult :: String -> Board -> IO ()
 displayResult r b  = do
   putStr $ "\n" ++ (show b) ++ "\n> "
@@ -111,3 +117,11 @@ displayHelp b = do
   readAndApplyCommand b
 
 
+-- handleError function
+handleError :: String -> IO ()
+handleError errorMessage = do
+  putStrLn ""
+  putStrLn ("Error: " ++ errorMessage)
+
+handleSavingError :: IOError -> IO ()
+handleSavingError e = handleError (ioeGetErrorString e)
