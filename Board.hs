@@ -5,8 +5,8 @@ import Data.Maybe
 import Data.Char
 
 
-data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deriving (Eq, Show)
-data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving Eq
+data Piece = Wolf { pfield :: (Int, Int) } | Sheep { pfield :: (Int, Int) } deriving (Eq, Show, Read)
+data Board = Board { wolf :: Piece,  sheep :: [Piece] } deriving (Eq, Show, Read)
 
 data Result = Unconcluded | SheepWon | WolfWon deriving (Eq, Show)
 data Turn = WolfTurn | SheepTurn deriving (Eq, Show)
@@ -30,8 +30,8 @@ printBoard board =
   row b r = intercalate " " (show r : [ [pf board (x, r)] | x <- [0..7]])
   header = "  0 1 2 3 4 5 6 7"
 
-instance Show Board where
-  show (Board w s) = printBoard(Board w s)
+--instance Show Board where
+  --show (Board w s) = printBoard(Board w s)
 
 pieces :: Board -> [(Int,Int)]
 pieces b =

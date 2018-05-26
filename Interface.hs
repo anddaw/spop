@@ -9,6 +9,7 @@ import System.Exit
 import System.IO.Error
 import Control.Exception
 import Control.Monad
+import Data.Maybe
 
 initialBoard = Board
   (Wolf (0,7))
@@ -25,7 +26,7 @@ splitCommand cmd =
 
 readAndApplyCommand :: Board -> IO ()
 readAndApplyCommand b = do
-  putStr $ "\n" ++ (show b) ++ "\n> "
+  putStr $ "\n" ++ (printBoard b) ++ "\n> "
   hFlush stdout
   input <- getLine
   let
@@ -40,17 +41,22 @@ readAndApplyCommand b = do
       "quit" -> exitSuccess
       _ -> wrongInput input b
 
-
 doLoad :: [Char] -> Board -> IO ()
 doLoad c b = do
   putStrLn $ "LOADING: " ++ c ++ "\n"
-  readAndApplyCommand b
+  content <- catch (do
+      fileContent <- readFile c
+      return (Just fileContent))
+    handleLoadError
+    --TODO : VALIDATION
+  readAndApplyCommand (fromJust (readBoard (fromJust content)))
+
 
 doSave :: [Char] -> Board -> IO ()
 doSave c b = do
   putStrLn "SAVING"
   catch (do
-    writeFile c (printBoard b)
+    writeFile c (show b)
     putStrLn ""
     putStrLn ("Game saved to: " ++ c))
     handleSavingError
@@ -98,7 +104,7 @@ checkResult b = do
 
 displayResult :: String -> Board -> IO ()
 displayResult r b  = do
-  putStr $ "\n" ++ (show b) ++ "\n> "
+  putStr $ "\n" ++ (printBoard b) ++ "\n> "
   putStrLn r
   putStrLn "Press enter to play again"
   _ <- getLine
@@ -125,3 +131,17 @@ handleError errorMessage = do
 
 handleSavingError :: IOError -> IO ()
 handleSavingError e = handleError (ioeGetErrorString e)
+
+handleLError :: String -> tResult -> IO tResult
+handleLError errorMessage result = do
+      putStrLn ""
+      putStrLn ("Error: " ++ errorMessage)
+      return result
+
+handleLoadError :: IOError -> IO (Maybe string)
+handleLoadError e = handleLError (ioeGetErrorString e) Nothing
+
+readBoard :: String -> Maybe Board
+readBoard string = case reads string of
+  [(board, "")] -> Just board
+  _             -> Nothing
