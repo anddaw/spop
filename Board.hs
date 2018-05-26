@@ -85,9 +85,11 @@ moveWolf (x,y) b
 
 moveSheep :: Direction ->  Int -> Board -> Board
 moveSheep d i b
-  | (x,y) `elem` possibleMoves (sheep b !! (i - 1)) b =
-    Board (wolf b) [ if i - 1 == j then (Sheep (x,y)) else sheep b !! j | j <-
-                       [0..(length (sheep b) - 1)]]
+  | i >= 1 &&
+    i <= 4 &&
+    (x,y) `elem` possibleMoves (sheep b !! (i - 1)) b =
+      Board (wolf b) [ if i - 1 == j then (Sheep (x,y)) else sheep b !! j |
+                       j <- [0..(length (sheep b) - 1)]]
   | otherwise = b
   where
     (x,y) = if d == L
